@@ -20,7 +20,7 @@ public class TF2DirectAPI
                 Console.WriteLine("RCON disabled, functionality will be limited!");
             RCONEnabled = false;
         }
-        RConClient = new RCON(IPAddress.Loopback, 27015, rconPassword, sourceMultiPacketSupport:true);
+        RConClient = new RCON(IPAddress.Loopback, 27015, rconPassword, sourceMultiPacketSupport:true, logger:new TF2Logger());
         try
         {
             await RConClient.ConnectAsync();

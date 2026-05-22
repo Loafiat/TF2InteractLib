@@ -6,7 +6,7 @@ namespace TF2InteractLib;
 
 public class TF2InteractAPI
 {
-    // this causes timeouts, unsure why
+    // this causes timeouts for some reason
     //public static async void EventParser(string newInfo)
     //{
     //    if (newInfo.Contains("suicided") || newInfo.Contains("killed"))
@@ -14,7 +14,8 @@ public class TF2InteractAPI
     //        foreach (string line in newInfo.Split('\n'))
     //        {
     //            PlayerKillArgs args = new();
-    //            TF2Player[] playerArray = await TF2InteractAPI.GetPlayerList();
+    //            // What the fuck? Under any other circumstance GetPlayerList works but specifically here the server decides not to respond CONSISTENTLY.
+    //            TF2Player[] playerArray = await GetPlayerList();
     //            List<TF2Player> validPlayers = new List<TF2Player>();
     //            foreach (TF2Player player in playerArray)
     //            {
