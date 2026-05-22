@@ -9,7 +9,6 @@ public class TF2DirectAPI
     public static bool Initialized { get; private set; }
     internal static RCON? RConClient = null;
     internal static StreamReader? ConsoleOutputInternal = null;
-    internal static List<StreamWriter> ConsoleOutputList = new();
     public static string ConsoleOutput { get; private set; }
     
     public static async Task<bool> Initialize(bool allowLogging, string tf2Dir = "C:/Program Files (x86)/Steam/steamapps/common/Team Fortress 2", string? rconPassword = null)
@@ -56,13 +55,6 @@ public class TF2DirectAPI
         return true;
     }
 
-    public static StreamReader GetConsoleStream()
-    {
-        StreamReader retstream = new(new MemoryStream());
-        ConsoleOutputList.Add(new StreamWriter(retstream.BaseStream));
-        return retstream;
-    }
-
     public static async Task OutputMainLoop()
     {
         if (!Initialized)
@@ -72,9 +64,7 @@ public class TF2DirectAPI
             string newInfo = await ConsoleOutputInternal.ReadToEndAsync();
             if (newInfo == string.Empty)
                 continue;
-            Console.Write(newInfo);
-            foreach (StreamWriter sw in ConsoleOutputList)
-                sw.Write(newInfo);
+            TF2InteractEvents.ExecuteConsoleLine(newInfo);
             ConsoleOutput += newInfo;
         }
     }

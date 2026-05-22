@@ -10,12 +10,12 @@ if (!success)
     return;
 }
 
-StreamReader reader = TF2DirectAPI.GetConsoleStream();
+TF2InteractEvents.PlayerKilled += args =>
+{
+    Console.WriteLine(args.Victim.SteamName);
+};
 
 while (true)
 {
-    string output = reader.ReadToEnd();
-    if (output != string.Empty)
-        Console.WriteLine(output);
 }
 #endif

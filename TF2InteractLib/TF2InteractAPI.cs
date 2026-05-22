@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using System.Numerics;
 using System.Reflection;
 using TF2InteractLib.Players;
@@ -7,6 +6,64 @@ namespace TF2InteractLib;
 
 public class TF2InteractAPI
 {
+    // this causes timeouts, unsure why
+    //public static async void EventParser(string newInfo)
+    //{
+    //    if (newInfo.Contains("suicided") || newInfo.Contains("killed"))
+    //    {
+    //        foreach (string line in newInfo.Split('\n'))
+    //        {
+    //            PlayerKillArgs args = new();
+    //            TF2Player[] playerArray = await TF2InteractAPI.GetPlayerList();
+    //            List<TF2Player> validPlayers = new List<TF2Player>();
+    //            foreach (TF2Player player in playerArray)
+    //            {
+    //                if (!player.IsValid)
+    //                    continue;
+    //                validPlayers.Add(player);
+    //            }
+    //            string operationLine = line;
+    //            if (operationLine.EndsWith("(crit)"))
+    //                args.CriticalKill = true;
+    //            if (line.Contains("killed"))
+    //            {
+    //                Console.WriteLine(line);
+    //                foreach (TF2Player player in validPlayers)
+    //                {
+    //                    if (operationLine.StartsWith(player.SteamName))
+    //                    {
+    //                        args.Victim = player;
+    //                        operationLine = operationLine.Replace(player.SteamName + " killed ", string.Empty);
+    //                    }
+    //                }
+    //                foreach (TF2Player player in validPlayers)
+    //                {
+    //                    if (operationLine.StartsWith(player.SteamName))
+    //                    {
+    //                        args.Victim = player;
+    //                        operationLine = operationLine.Replace(player.SteamName, string.Empty);
+    //                    }
+    //                }
+    //                if (operationLine.Contains("with"))
+    //                {
+    //                    operationLine = operationLine.Replace(" with ", string.Empty);
+    //                    operationLine = operationLine.Replace(".", string.Empty);
+    //                    args.WeaponName = operationLine;
+    //                }
+    //            }
+    //            if (line.Contains("suicided"))
+    //            {
+    //                foreach (TF2Player player in validPlayers)
+    //                {
+    //                    if (line.StartsWith(player.SteamName))
+    //                        args.Victim = player;
+    //                }
+    //            }
+    //            TF2InteractEvents.ExecutePlayerKilled(args);
+    //        }
+    //    }
+    //}
+    
     public static string[] PlayerInfoLineMarkers =
     [
         "m_szName[",
