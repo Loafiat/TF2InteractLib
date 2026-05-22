@@ -2,7 +2,6 @@
 
 #if TestingMode
 using TF2InteractLib;
-using TF2InteractLib.Players;
 
 bool success = await TF2DirectAPI.Initialize(true, "/home/lofiat/.local/share/Steam/steamapps/common/Team Fortress 2", "sillyguy123");
 if (!success)
@@ -11,10 +10,12 @@ if (!success)
     return;
 }
 
+StreamReader reader = TF2DirectAPI.GetConsoleStream();
+
 while (true)
 {
-    await Task.Delay(1000);
-    if (!(await TF2DirectAPI.GetBindValue("w")).Contains("echo"))
-        await TF2DirectAPI.SetBindValue("w", await TF2DirectAPI.GetBindValue("w") + ";echo");
+    string output = reader.ReadToEnd();
+    if (output != string.Empty)
+        Console.WriteLine(output);
 }
 #endif

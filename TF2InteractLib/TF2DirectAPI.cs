@@ -9,6 +9,7 @@ public class TF2DirectAPI
     public static bool Initialized { get; private set; }
     internal static RCON? RConClient = null;
     internal static StreamReader? ConsoleOutputInternal = null;
+    internal static List<StreamWriter> ConsoleOutputList = new();
     public static string ConsoleOutput { get; private set; }
     
     public static async Task<bool> Initialize(bool allowLogging, string tf2Dir = "C:/Program Files (x86)/Steam/steamapps/common/Team Fortress 2", string? rconPassword = null)
@@ -21,8 +22,26 @@ public class TF2DirectAPI
             RCONEnabled = false;
         }
         RConClient = new RCON(IPAddress.Loopback, 27015, rconPassword, sourceMultiPacketSupport:true);
-        await RConClient.ConnectAsync();
-        await RConClient.AuthenticateAsync();
+        try
+        {
+            await RConClient.ConnectAsync();
+        }
+        catch (Exception e)
+        {
+            if (allowLogging)
+                Console.WriteLine(e);
+            return false;
+        }
+        try
+        {
+            await RConClient.AuthenticateAsync();
+        }
+        catch (Exception e)
+        {
+            if (allowLogging)
+                Console.WriteLine(e);
+            return false;
+        }
         if (!RConClient.Authenticated)
             return false;
         await RConClient.SendCommandAsync("con_logfile TF2Output.log");
@@ -37,20 +56,26 @@ public class TF2DirectAPI
         return true;
     }
 
+    public static StreamReader GetConsoleStream()
+    {
+        StreamReader retstream = new(new MemoryStream());
+        ConsoleOutputList.Add(new StreamWriter(retstream.BaseStream));
+        return retstream;
+    }
+
     public static async Task OutputMainLoop()
     {
         if (!Initialized)
             return;
-        await ConsoleOutputInternal!.ReadToEndAsync();
-        string lineBuffer = string.Empty;
         while (true)
         {
-            lineBuffer += await ConsoleOutputInternal.ReadToEndAsync();
-            if (lineBuffer.Contains("\n"))
-            {
-                ConsoleOutput += lineBuffer;
-                lineBuffer = string.Empty;
-            }
+            string newInfo = await ConsoleOutputInternal.ReadToEndAsync();
+            if (newInfo == string.Empty)
+                continue;
+            Console.Write(newInfo);
+            foreach (StreamWriter sw in ConsoleOutputList)
+                sw.Write(newInfo);
+            ConsoleOutput += newInfo;
         }
     }
 
@@ -59,6 +84,7 @@ public class TF2DirectAPI
         if (!Initialized)
             return false;
         ConsoleOutputInternal = File.OpenText(Path.Combine(tf2Dir, "tf", "tf2output.log"));
+        ConsoleOutputInternal.ReadToEnd();
         return true;
     }
 
@@ -68,9 +94,7 @@ public class TF2DirectAPI
             return "Uninitialized";
         try
         {
-            string output = await RConClient!.SendCommandAsync(command);
-            ConsoleOutput += output;
-            return output;
+            return await RConClient!.SendCommandAsync(command);
         }
         catch (Exception e)
         {
