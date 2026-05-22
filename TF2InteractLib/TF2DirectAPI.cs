@@ -20,7 +20,6 @@ public class TF2DirectAPI
                 Console.WriteLine("RCON disabled, functionality will be limited!");
             RCONEnabled = false;
         }
-
         RConClient = new RCON(IPAddress.Loopback, 27015, rconPassword, sourceMultiPacketSupport:true);
         await RConClient.ConnectAsync();
         await RConClient.AuthenticateAsync();
@@ -78,5 +77,36 @@ public class TF2DirectAPI
             Console.WriteLine(e);
             return string.Empty;
         }
+    }
+
+    public static async Task<string> GetConVarValue(string cvarName)
+    {
+        string output = await ExecuteCommand(cvarName);
+        while (output == string.Empty)
+            output = await ExecuteCommand(cvarName);
+        output = output.Replace($"\"{cvarName}\" = ", string.Empty);
+        output = output.Substring(output.IndexOf('"') + 1);
+        output = output.Substring(0, output.IndexOf('"'));
+        return output;
+    }
+
+    public static async Task SetConVarValue(string cvarName, string value)
+    {
+        await ExecuteCommand(cvarName + " " + value);
+    }
+
+    public static async Task<string> GetBindValue(string bindKey)
+    {
+        string output = await ExecuteCommand("bind " + bindKey);
+        while (output == string.Empty)
+            output = await ExecuteCommand("bind " + bindKey);
+        output = output.Replace($"\"{bindKey}\" = \"", string.Empty);
+        output = output[..^1];
+        return output;
+    }
+
+    public static async Task SetBindValue(string bindKey, string value)
+    {
+        await ExecuteCommand("bind " + bindKey + " \"" + value + '\"');
     }
 }

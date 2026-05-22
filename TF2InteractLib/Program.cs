@@ -10,11 +10,11 @@ if (!success)
     Console.WriteLine("Could not connect to server");
     return;
 }
+
 while (true)
 {
-    //await Task.Delay(200);
-    TF2LocalPlayer player = await TF2InteractAPI.GetLocalPlayer();
-    Console.WriteLine(player.m_iHealth);
-    Console.WriteLine(player.m_iAmmo[1]); // scattergun
+    await Task.Delay(1000);
+    if (!(await TF2DirectAPI.GetBindValue("w")).Contains("echo"))
+        await TF2DirectAPI.SetBindValue("w", await TF2DirectAPI.GetBindValue("w") + ";echo");
 }
 #endif
