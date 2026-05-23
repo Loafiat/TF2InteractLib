@@ -8,72 +8,6 @@ namespace TF2InteractLib;
 
 public class TF2InteractAPI
 {
-    // this causes timeouts for some reason
-    public static async void EventParser(string newInfo)
-    {
-        if (newInfo.Contains("suicided") || newInfo.Contains("killed"))
-        {
-            foreach (string line in newInfo.Split('\n'))
-            {
-                PlayerKillArgs args = new();
-                // What the fuck? Under any other circumstance GetPlayerList works but specifically here the server decides not to respond CONSISTENTLY.
-                List<TF2Player> validPlayers = await GetValidPlayerListForEvent();
-                string operationLine = line;
-                string debugLine = "";
-                if (operationLine.EndsWith("(crit)"))
-                {
-                    operationLine = operationLine.Replace(" (crit)", string.Empty);
-                    args.CriticalKill = true;
-                }
-                if (line.Contains("killed"))
-                {
-                    foreach (TF2Player player in validPlayers)
-                    {
-                        if (player.SteamName == null)
-                            continue;
-                        debugLine = operationLine;
-                        if (operationLine.StartsWith(player.SteamName))
-                        {
-                            args.Killer = player;
-                            operationLine = operationLine.Replace(player.SteamName + " killed ", string.Empty);
-                            break;
-                        }
-                    }
-                    foreach (TF2Player player in validPlayers)
-                    {
-                        if (player.SteamName == null)
-                            continue;
-                        if (operationLine.StartsWith(player.SteamName))
-                        {
-                            if (player == args.Victim)
-                                Console.WriteLine(debugLine);
-                            args.Victim = player;
-                            operationLine = operationLine.Replace(player.SteamName, string.Empty);
-                            break;
-                        }
-                    }
-                    if (operationLine.Contains("with"))
-                    {
-                        operationLine = operationLine.Replace(" with ", string.Empty);
-                        args.WeaponName = operationLine.Replace(".", string.Empty);
-                    }
-                }
-                if (line.Contains("suicided"))
-                {
-                    foreach (TF2Player player in validPlayers)
-                    {
-                        if (player.SteamName == null)
-                            continue;
-                        if (line.StartsWith(player.SteamName))
-                            args.Victim = player;
-                    }
-                }
-                if (args.Victim != null)
-                    TF2InteractEvents.ExecutePlayerKilled(args);
-            }
-        }
-    }
-    
     // All regex taken from MegaAntiCheat
     private static string szNameRegex = @"^m_szName\[(\d+)\]\s+string\s+\((.+)\)$";
     
@@ -378,6 +312,96 @@ public class TF2InteractAPI
             }
         }
         return localPlayer;
+    }
+    
+    public static async void EventParser(object caller, string newInfo)
+    {
+        //TODO: get the user's chat seperator via parsing custom folder (won't catch vpks but good enough).
+        // This is also the seperator my hud uses so it's not gonna work for anyone but solarhud users lol.
+        if (newInfo.Contains(":  "))
+        {
+            // allat just to make sure this is a chat message
+            foreach (string line in newInfo.Split('\n'))
+                if (line.Contains(":  "))
+                {
+                    List<TF2Player> validPlayers = await GetValidPlayerListForEvent();
+                    foreach (TF2Player player in validPlayers)
+                    {
+                        if (player.SteamName == null)
+                            continue;
+                        if (line.StartsWith(player.SteamName))
+                        {
+                            // now we actually parse it.
+                            string operationLine = line;
+                            operationLine = operationLine.Replace(player.SteamName + ":  ", "");
+                            TF2InteractEvents.ExecutePlayerTalk(player, operationLine);
+                            return;
+                        }
+                    }
+                }
+        }
+        
+        if (newInfo.Contains("suicided") || newInfo.Contains("killed"))
+        {
+            foreach (string line in newInfo.Split('\n'))
+            {
+                PlayerKillArgs args = new();
+                // What the fuck? Under any other circumstance GetPlayerList works but specifically here the server decides not to respond CONSISTENTLY.
+                List<TF2Player> validPlayers = await GetValidPlayerListForEvent();
+                string operationLine = line;
+                string debugLine = "";
+                if (operationLine.EndsWith("(crit)"))
+                {
+                    operationLine = operationLine.Replace(" (crit)", string.Empty);
+                    args.CriticalKill = true;
+                }
+                if (line.Contains("killed"))
+                {
+                    foreach (TF2Player player in validPlayers)
+                    {
+                        if (player.SteamName == null)
+                            continue;
+                        debugLine = operationLine;
+                        if (operationLine.StartsWith(player.SteamName))
+                        {
+                            args.Killer = player;
+                            operationLine = operationLine.Replace(player.SteamName + " killed ", string.Empty);
+                            break;
+                        }
+                    }
+                    foreach (TF2Player player in validPlayers)
+                    {
+                        if (player.SteamName == null)
+                            continue;
+                        if (operationLine.StartsWith(player.SteamName))
+                        {
+                            if (player == args.Victim)
+                                Console.WriteLine(debugLine);
+                            args.Victim = player;
+                            operationLine = operationLine.Replace(player.SteamName, string.Empty);
+                            break;
+                        }
+                    }
+                    if (operationLine.Contains("with"))
+                    {
+                        operationLine = operationLine.Replace(" with ", string.Empty);
+                        args.WeaponName = operationLine.Replace(".", string.Empty);
+                    }
+                }
+                if (line.Contains("suicided"))
+                {
+                    foreach (TF2Player player in validPlayers)
+                    {
+                        if (player.SteamName == null)
+                            continue;
+                        if (line.StartsWith(player.SteamName))
+                            args.Victim = player;
+                    }
+                }
+                if (args.Victim != null)
+                    TF2InteractEvents.ExecutePlayerKilled(args);
+            }
+        }
     }
 }
 
