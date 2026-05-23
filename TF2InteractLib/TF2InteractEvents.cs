@@ -9,7 +9,7 @@ public class TF2InteractEvents
 
     public static event EventHandler<PlayerKillArgs> PlayerKilled;
 
-    public static event EventHandler<TF2Player, string> PlayerMessage;
+    public static event EventHandler<PlayerMessageArgs> PlayerMessage;
 
     public static void ExecuteConsoleLine(string newLine)
     {
@@ -21,8 +21,8 @@ public class TF2InteractEvents
         PlayerKilled?.Invoke(null, args);
     }
 
-    public static void ExecutePlayerTalk(TF2Player sender, string message)
+    public static void ExecutePlayerTalk(PlayerMessageArgs args)
     {
-        PlayerMessage?.Invoke(sender, message);
+        PlayerMessage?.Invoke(null, args);
     }
 }

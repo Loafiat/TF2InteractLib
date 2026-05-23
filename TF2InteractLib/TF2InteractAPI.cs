@@ -316,29 +316,44 @@ public class TF2InteractAPI
     
     public static async void EventParser(object caller, string newInfo)
     {
-        //TODO: get the user's chat seperator via parsing custom folder (won't catch vpks but good enough).
-        // This is also the seperator my hud uses so it's not gonna work for anyone but solarhud users lol.
+        //TODO: get the user's chat seperator (and other stuff like *DEAD* and (TEAM)) via parsing custom folder (won't catch vpks but good enough).
+        // This is also the seperator stuff my hud uses so it's not gonna work for anyone but solarhud users lol.
         if (newInfo.Contains(":  "))
         {
             // allat just to make sure this is a chat message
             foreach (string line in newInfo.Split('\n'))
-                if (line.Contains(":  "))
+            {
+                string operateLine = line;
+                if (operateLine.Contains(":  "))
                 {
+                    PlayerMessageArgs args = new PlayerMessageArgs();
+                    args.Dead = operateLine.Contains("[DEAD]");
+                    args.Team = operateLine.Contains("(TEAM)");
+                    if (args.Team)
+                        operateLine = operateLine.Replace("(TEAM) ", string.Empty);
+                    if (args.Dead)
+                        operateLine = operateLine.Replace("[DEAD] ", string.Empty);
+                    if (args.Dead && args.Team)
+                        operateLine = operateLine.Replace("[DEAD]", string.Empty);
+                    
                     List<TF2Player> validPlayers = await GetValidPlayerListForEvent();
                     foreach (TF2Player player in validPlayers)
                     {
                         if (player.SteamName == null)
                             continue;
-                        if (line.StartsWith(player.SteamName))
+                        if (operateLine.StartsWith(player.SteamName))
                         {
                             // now we actually parse it.
-                            string operationLine = line;
+                            string operationLine = operateLine;
                             operationLine = operationLine.Replace(player.SteamName + ":  ", "");
-                            TF2InteractEvents.ExecutePlayerTalk(player, operationLine);
+                            args.Message = operationLine;
+                            args.Sender = player;
+                            TF2InteractEvents.ExecutePlayerTalk(args);
                             return;
                         }
                     }
                 }
+            }
         }
         
         if (newInfo.Contains("suicided") || newInfo.Contains("killed"))

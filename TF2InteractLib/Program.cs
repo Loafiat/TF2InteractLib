@@ -10,9 +10,9 @@ if (!success)
     return;
 }
 
-TF2InteractEvents.PlayerMessage += (sender, msg) =>
+TF2InteractEvents.PlayerMessage += (_, msg) =>
 {
-    Console.WriteLine($"{sender.SteamName} said {msg}");
+    Console.WriteLine($"{(msg.Dead ? "[DEAD] " : "")}{(msg.Team ? "[TEAM] " : "")}{msg.Sender.SteamName} said {msg.Message}");
 };
 
 //TF2InteractEvents.PlayerKilled += (_, killArgs) =>
