@@ -1,6 +1,8 @@
+using System.Runtime.InteropServices.JavaScript;
+
 namespace TF2InteractLib.Players;
 
-public struct TF2Player
+public class TF2Player
 {
     // Steam User Info
     public string SteamName { get; set; }

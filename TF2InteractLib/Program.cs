@@ -10,12 +10,24 @@ if (!success)
     return;
 }
 
-TF2InteractEvents.PlayerKilled += args =>
+TF2InteractEvents.PlayerKilled += killArgs =>
 {
-    Console.WriteLine(args.Victim.SteamName);
+    Console.Write(killArgs.Victim.SteamName + " died");
+    if (killArgs.Killer != null)
+        Console.Write(" to " + killArgs.Killer.SteamName);
+    if (killArgs.WeaponName != null)
+        Console.Write(", they were using " + killArgs.WeaponName);
+    Console.Write('.');
+    if (killArgs.CriticalKill)
+    {
+        Console.Write(" It was a critical hit.");
+    }
+    Console.WriteLine();
 };
 
 while (true)
 {
+    
 }
+
 #endif

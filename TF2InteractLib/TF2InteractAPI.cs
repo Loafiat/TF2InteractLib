@@ -1,5 +1,7 @@
 using System.Numerics;
 using System.Reflection;
+using System.Text.RegularExpressions;
+using TF2InteractLib.Events;
 using TF2InteractLib.Players;
 
 namespace TF2InteractLib;
@@ -7,65 +9,95 @@ namespace TF2InteractLib;
 public class TF2InteractAPI
 {
     // this causes timeouts for some reason
-    //public static async void EventParser(string newInfo)
-    //{
-    //    if (newInfo.Contains("suicided") || newInfo.Contains("killed"))
-    //    {
-    //        foreach (string line in newInfo.Split('\n'))
-    //        {
-    //            PlayerKillArgs args = new();
-    //            // What the fuck? Under any other circumstance GetPlayerList works but specifically here the server decides not to respond CONSISTENTLY.
-    //            TF2Player[] playerArray = await GetPlayerList();
-    //            List<TF2Player> validPlayers = new List<TF2Player>();
-    //            foreach (TF2Player player in playerArray)
-    //            {
-    //                if (!player.IsValid)
-    //                    continue;
-    //                validPlayers.Add(player);
-    //            }
-    //            string operationLine = line;
-    //            if (operationLine.EndsWith("(crit)"))
-    //                args.CriticalKill = true;
-    //            if (line.Contains("killed"))
-    //            {
-    //                Console.WriteLine(line);
-    //                foreach (TF2Player player in validPlayers)
-    //                {
-    //                    if (operationLine.StartsWith(player.SteamName))
-    //                    {
-    //                        args.Victim = player;
-    //                        operationLine = operationLine.Replace(player.SteamName + " killed ", string.Empty);
-    //                    }
-    //                }
-    //                foreach (TF2Player player in validPlayers)
-    //                {
-    //                    if (operationLine.StartsWith(player.SteamName))
-    //                    {
-    //                        args.Victim = player;
-    //                        operationLine = operationLine.Replace(player.SteamName, string.Empty);
-    //                    }
-    //                }
-    //                if (operationLine.Contains("with"))
-    //                {
-    //                    operationLine = operationLine.Replace(" with ", string.Empty);
-    //                    operationLine = operationLine.Replace(".", string.Empty);
-    //                    args.WeaponName = operationLine;
-    //                }
-    //            }
-    //            if (line.Contains("suicided"))
-    //            {
-    //                foreach (TF2Player player in validPlayers)
-    //                {
-    //                    if (line.StartsWith(player.SteamName))
-    //                        args.Victim = player;
-    //                }
-    //            }
-    //            TF2InteractEvents.ExecutePlayerKilled(args);
-    //        }
-    //    }
-    //}
+    public static async void EventParser(string newInfo)
+    {
+        if (newInfo.Contains("suicided") || newInfo.Contains("killed"))
+        {
+            foreach (string line in newInfo.Split('\n'))
+            {
+                PlayerKillArgs args = new();
+                // What the fuck? Under any other circumstance GetPlayerList works but specifically here the server decides not to respond CONSISTENTLY.
+                List<TF2Player> validPlayers = await GetValidPlayerListForEvent();
+                string operationLine = line;
+                string debugLine = "";
+                if (operationLine.EndsWith("(crit)"))
+                {
+                    operationLine = operationLine.Replace(" (crit)", string.Empty);
+                    args.CriticalKill = true;
+                }
+                if (line.Contains("killed"))
+                {
+                    foreach (TF2Player player in validPlayers)
+                    {
+                        if (player.SteamName == null)
+                            continue;
+                        debugLine = operationLine;
+                        if (operationLine.StartsWith(player.SteamName))
+                        {
+                            args.Killer = player;
+                            operationLine = operationLine.Replace(player.SteamName + " killed ", string.Empty);
+                            break;
+                        }
+                    }
+                    foreach (TF2Player player in validPlayers)
+                    {
+                        if (player.SteamName == null)
+                            continue;
+                        if (operationLine.StartsWith(player.SteamName))
+                        {
+                            if (player == args.Victim)
+                                Console.WriteLine(debugLine);
+                            args.Victim = player;
+                            operationLine = operationLine.Replace(player.SteamName, string.Empty);
+                            break;
+                        }
+                    }
+                    if (operationLine.Contains("with"))
+                    {
+                        operationLine = operationLine.Replace(" with ", string.Empty);
+                        args.WeaponName = operationLine.Replace(".", string.Empty);
+                    }
+                }
+                if (line.Contains("suicided"))
+                {
+                    foreach (TF2Player player in validPlayers)
+                    {
+                        if (player.SteamName == null)
+                            continue;
+                        if (line.StartsWith(player.SteamName))
+                            args.Victim = player;
+                    }
+                }
+                if (args.Victim != null)
+                    TF2InteractEvents.ExecutePlayerKilled(args);
+            }
+        }
+    }
     
-    public static string[] PlayerInfoLineMarkers =
+    // All regex taken from MegaAntiCheat
+    private static string szNameRegex = @"^m_szName\[(\d+)\]\s+string\s+\((.+)\)$";
+    
+    private static string iPingRegex = @"^m_iPing\[(\d+)\]\s+integer\s+\((\d+)\)$";
+    
+    private static string iScoreRegex = @"^m_iScore\[(\d+)\]\s+integer\s+\((\d+)\)$";
+    
+    private static string iDeathsRegex = @"^m_iDeaths\[(\d+)\]\s+integer\s+\((\d+)\)$";
+    
+    private static string bConnectedRegex = @"^m_bConnected\[(\d+)\]\s+bool\s+\((false|true)\)$";
+    
+    private static string iTeamRegex = @"^m_iTeam\[(\d+)\]\s+integer\s+\(([0-3])\)$";
+    
+    private static string bAliveRegex = @"^m_bAlive\[(\d+)\]\s+bool\s+\((false|true)\)$";
+
+    private static string iHealthRegex = @"^m_iHealth\[(\d+)\]\s+integer\s+\((\d+)\)$";
+
+    private static string iAccountIDRegex = @"^m_iAccountID\[(\d+)\]\s+integer\s+\((\d{4,})\)$";
+
+    private static string bValidRegex = @"^m_bValid\[(\d+)\]\s+bool\s+\((false|true)\)$";
+
+    private static string iUserIDRegex = @"^m_iUserID\[(\d+)\]\s+integer\s+\((\d+)\)$";
+    
+    private static string[] PlayerInfoLineMarkers =
     [
         "m_szName[",
         "m_iPing[",
@@ -79,6 +111,101 @@ public class TF2InteractAPI
         "m_bValid[",
         "m_iUserID["
     ];
+
+    private static Dictionary<string, string> MarkerToRegexTable = new()
+    {
+        { "m_szName[", szNameRegex },
+        { "m_iPing[", iPingRegex },
+        { "m_iScore[", iScoreRegex },
+        { "m_iDeaths[", iDeathsRegex },
+        { "m_bConnected[", bConnectedRegex },
+        { "m_iTeam[", iTeamRegex },
+        { "m_bAlive[", bAliveRegex },
+        { "m_iHealth[", iHealthRegex },
+        { "m_iAccountID[", iAccountIDRegex },
+        { "m_bValid[", bValidRegex },
+        { "m_iUserID[", iUserIDRegex }
+    };
+
+    private static Dictionary<string, Type> MarkerToTypeTable = new()
+    {
+        { "m_szName[", typeof(string) },
+        { "m_iPing[", typeof(int) },
+        { "m_iScore[", typeof(int) },
+        { "m_iDeaths[", typeof(int) },
+        { "m_bConnected[", typeof(bool) },
+        { "m_iTeam[", typeof(int) },
+        { "m_bAlive[", typeof(bool) },
+        { "m_iHealth[", typeof(int) },
+        { "m_iAccountID[", typeof(int) },
+        { "m_bValid[", typeof(bool) },
+        { "m_iUserID[", typeof(int) }
+    };
+
+    private static Dictionary<string, string> MarkerToPlayerPropertyTable = new()
+    {
+        { "m_szName[", "SteamName" },
+        { "m_iPing[", "Ping" },
+        { "m_iScore[", "Score" },
+        { "m_iDeaths[", "Deaths" },
+        { "m_bConnected[", "IsConnected" },
+        { "m_iTeam[", "Team" },
+        { "m_bAlive[", "Alive" },
+        { "m_iHealth[", "Health" },
+        { "m_iAccountID[", "SteamID" },
+        { "m_bValid[", "IsValid" },
+        { "m_iUserID[", "UserID" }
+    };
+
+    private static async Task<List<TF2Player>> GetValidPlayerListForEvent()
+    {
+        TF2Player[] players = new TF2Player[102];
+        for (int i = 0; i < players.Length; i++)
+            players[i] = new TF2Player();
+        
+        string playerDump = await TF2DirectAPI.EventRConClient!.SendCommandAsync("g15_dumpplayer");
+        List<string> splitted = playerDump.Split('\n').ToList();
+        
+        // needs to be a seperate numerator to operate on list while looping
+        for (var i = 0; i < splitted.Count; i++)
+        {
+            if (splitted[i].Count(x => x == ')') > 1)
+            {
+                int firstParthesis = splitted[i].IndexOf(')')+1;
+                splitted[i] = splitted[i][..firstParthesis];
+                splitted.Add(splitted[i][firstParthesis..]);
+            }
+        }
+        
+        foreach (string line in splitted)
+        {
+            for (var i = 0; i < PlayerInfoLineMarkers.Length; i++)
+            {
+                var marker = PlayerInfoLineMarkers[i];
+                if (line.Contains(marker))
+                {
+                    Match regMatch = Regex.Match(line, MarkerToRegexTable[marker]);
+                    if (!regMatch.Success)
+                        continue;
+                    int index = int.Parse(regMatch.Groups[1].Value);
+                    object value = ArbitraryParser.Parse(MarkerToTypeTable[marker], regMatch.Groups[2].Value);
+                    TF2Player player = players[index];
+                    PropertyInfo? prop = typeof(TF2Player).GetProperty(MarkerToPlayerPropertyTable[marker]);
+                    // This shit is why TF2Player isn't a struct. Why dotnet, why?
+                    prop.SetValue(player, value);
+                }
+            }
+        }
+
+        List<TF2Player> validList = new();
+        foreach (TF2Player player in players)
+        {
+            if (player.IsValid)
+                validList.Add(player);
+        }
+        
+        return validList;
+    }
     
     public static async Task<TF2Player[]> GetPlayerList()
     {
@@ -87,74 +214,41 @@ public class TF2InteractAPI
             Console.WriteLine("Not initialized couldn't get player list!");
             return null;
         }
+
         TF2Player[] players = new TF2Player[102];
+        for (var i = 0; i < players.Length; i++)
+            players[i] = new TF2Player();
+
         string playerDump = await TF2DirectAPI.ExecuteCommand("g15_dumpplayer");
-        foreach (string line in playerDump.Split('\n'))
+        List<string> splitted = playerDump.Split('\n').ToList();
+        
+        // needs to be a seperate numerator to operate on list while looping
+        for (var i = 0; i < splitted.Count; i++)
         {
-            string operationLine = line.Trim();
-            bool foundMarkerForLine = false;
+            if (splitted[i].Count(x => x == ')') > 1)
+            {
+                int firstParthesis = splitted[i].IndexOf(')')+1;
+                splitted[i] = splitted[i][..firstParthesis];
+                splitted.Add(splitted[i][firstParthesis..]);
+            }
+        }
+
+        foreach (string line in splitted)
+        {
             for (var i = 0; i < PlayerInfoLineMarkers.Length; i++)
             {
                 var marker = PlayerInfoLineMarkers[i];
-                if (operationLine.Contains(marker))
+                if (line.Contains(marker))
                 {
-                    operationLine = operationLine[operationLine.IndexOf(marker)..];
-                    operationLine = operationLine.Replace(marker, "");
-                    try
-                    {
-                        int.Parse(operationLine[..operationLine.IndexOf(']')]);
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(line);
-                        throw e;
-                    }
-                    int playerIndex = int.Parse(operationLine[..operationLine.IndexOf(']')]);
-                    operationLine = operationLine[(operationLine.IndexOf('(') + 1)..operationLine.IndexOf(')')];
-                    try
-                    {
-                        switch (PlayerInfoLineMarkers[i])
-                        {
-                            case "m_szName[":
-                                players[playerIndex].SteamName = operationLine;
-                                break;
-                            case "m_iPing[":
-                                players[playerIndex].Ping = int.Parse(operationLine);
-                                break;
-                            case "m_iScore[":
-                                players[playerIndex].Score = int.Parse(operationLine);
-                                break;
-                            case "m_iDeaths[":
-                                players[playerIndex].Deaths = int.Parse(operationLine);
-                                break;
-                            case "m_bConnected":
-                                players[playerIndex].IsConnected = bool.Parse(operationLine);
-                                break;
-                            case "m_iTeam[":
-                                players[playerIndex].Team = (TF2Team)int.Parse(operationLine);
-                                break;
-                            case "m_bAlive[":
-                                players[playerIndex].Alive = bool.Parse(operationLine);
-                                break;
-                            case "m_iHealth[":
-                                players[playerIndex].Health = int.Parse(operationLine);
-                                break;
-                            case "m_iAccountID[":
-                                players[playerIndex].SteamID = int.Parse(operationLine);
-                                break;
-                            case "m_bValid[":
-                                players[playerIndex].IsValid = bool.Parse(operationLine);
-                                break;
-                            case "m_iUserID[":
-                                players[playerIndex].UserID = int.Parse(operationLine);
-                                break;
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(playerIndex);
-                        throw e;
-                    }
+                    Match regMatch = Regex.Match(line, MarkerToRegexTable[marker]);
+                    if (!regMatch.Success)
+                        continue;
+                    int index = int.Parse(regMatch.Groups[1].Value);
+                    object value = ArbitraryParser.Parse(MarkerToTypeTable[marker], regMatch.Groups[2].Value);
+                    TF2Player player = players[index];
+                    PropertyInfo? prop = typeof(TF2Player).GetProperty(MarkerToPlayerPropertyTable[marker]);
+                    // This shit is why TF2Player isn't a struct. Why dotnet, why?
+                    prop?.SetValue(player, value);
                 }
             }
         }
@@ -293,6 +387,9 @@ public static class ArbitraryParser
     {
         try
         {
+            if (type == typeof(string))
+                return value;
+            
             if (type.IsArray)
                 type = type.GetElementType();
 
