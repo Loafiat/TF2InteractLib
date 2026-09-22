@@ -1,38 +1,40 @@
-﻿// See https://aka.ms/new-console-template for more information
-
-#if TestingMode
+﻿using System.Text;
 using TF2InteractLib;
+using TF2InteractLib.Events;
 
-bool success = await TF2DirectAPI.Initialize(true, "/home/lofiat/.local/share/Steam/steamapps/common/Team Fortress 2", "sillyguy123");
-if (!success)
+if  (!await Tf2Bridge.Start
+     (
+         new Tf2BridgeSettings
+         {
+             RconPassword = "sillyguy123",
+             Tf2Path = @"C:\Program Files (x86)\Steam\steamapps\common\Team Fortress 2",
+             LogFileName = "Tf2LogRead"
+         }
+     )
+    )
 {
-    Console.WriteLine("Could not connect to server");
-    return;
+    Console.WriteLine("Tf2Bridge failed");
+    return int.MinValue;
 }
 
-TF2InteractEvents.PlayerMessage += (_, msg) =>
+Events.OnMessageSent += message =>
 {
-    Console.WriteLine($"{(msg.Dead ? "[DEAD] " : "")}{(msg.Team ? "[TEAM] " : "")}{msg.Sender.SteamName} said {msg.Message}");
+    StringBuilder sb = new();
+    sb.Append(message.steam_name);
+    sb.Append(" said \"");
+    sb.Append(message.message + "\"");
+    if (message.isTeam)
+        sb.Append(" in team chat");
+    if (message.isDead)
+        sb.Append(" while dead");
+    sb.Append('.');
+    
+    Console.WriteLine(sb.ToString());
 };
-
-//TF2InteractEvents.PlayerKilled += (_, killArgs) =>
-//{
-//    Console.Write(killArgs.Victim.SteamName + " died");
-//    if (killArgs.Killer != null)
-//        Console.Write(" to " + killArgs.Killer.SteamName);
-//    if (killArgs.WeaponName != null)
-//        Console.Write(", they were using " + killArgs.WeaponName);
-//    Console.Write('.');
-//    if (killArgs.CriticalKill)
-//    {
-//        Console.Write(" It was a critical hit.");
-//    }
-//    Console.WriteLine();
-//};
 
 while (true)
 {
     
 }
 
-#endif
+return 0;
