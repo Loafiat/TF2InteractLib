@@ -34,12 +34,12 @@ public class Tf2Bridge
         return true;
     }
 
-    public static async Task ExecuteCommand(string command)
+    public static async Task<string> ExecuteCommand(string command, bool multipacket = false)
     {
         if (Rcon == null)
-            return;
+            return string.Empty;
         command = command.Trim();
-        await Rcon.ExecuteCommandAsync(command);
+        return await Rcon.ExecuteCommandAsync(command, multipacket);
     }
 
     public static void ExecuteOnBridgeThread(Action action)
