@@ -13,8 +13,6 @@ public class EventManager
     public static void ParseLogEvent(string logLine)
     {
         foreach (var parser in Parsers)
-        {
             parser.Parse(logLine);
-        }
     }
 }

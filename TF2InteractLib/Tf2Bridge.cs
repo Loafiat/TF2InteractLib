@@ -1,17 +1,14 @@
 ﻿using System.Collections.Concurrent;
 using RconSharp;
 using TF2InteractLib.Events;
+using static TF2InteractLib.Tf2BridgeInternals;
 
 namespace TF2InteractLib;
 
 public class Tf2Bridge
 {
     private static readonly ConcurrentQueue<Action?> ThreadExecuteQueue = new();
-    private static Thread? _bridgeThread;
-    private static Thread? _logThread;
-    private static RconClient? _client;
     public static Tf2BridgeSettings Settings { get; private set; }
-
     public static event Action<string> OnConsoleOutput = EventManager.ParseLogEvent;
 
     internal static void ExecuteOnConsoleOutput(string eventLog)
@@ -21,17 +18,21 @@ public class Tf2Bridge
     
     public static async Task<bool> Start(Tf2BridgeSettings settings)
     {
+        if (settings.RconPassword == null)
+        {
+            Console.WriteLine("Password required for client rcon to work!");
+            return false;
+        }
         Settings = settings;
-        _client = RconClient.Create(settings.RconHost, settings.RconPort);
-        await _client.ConnectAsync();
-        if (settings.RconPassword != null)
-            if (!await _client.AuthenticateAsync(settings.RconPassword))
-                return false;
-        _bridgeThread = new Thread(BridgeLoop);
+        Rcon = RconClient.Create(settings.RconHost, settings.RconPort);
+        await Rcon.ConnectAsync();
+        if (!await Rcon.AuthenticateAsync(settings.RconPassword))
+            return false;
+        _bridgeThread = new Thread(() => BridgeLoop(_bridgeThreadCancellationToken.Token));
         _bridgeThread.Start();
         if (settings.LogFileName != null)
-            await _client.ExecuteCommandAsync("con_logfile " + settings.LogFileName + ".log");
-        _logThread = new Thread(LogWatcher.ConsoleWatchLoop)
+            await Rcon.ExecuteCommandAsync("con_logfile " + settings.LogFileName + ".log");
+        _logThread = new Thread(() => LogWatcher.ConsoleWatchLoop(_logThreadCancellationToken.Token))
         {
             IsBackground = true
         };
@@ -41,10 +42,10 @@ public class Tf2Bridge
 
     public static async Task ExecuteCommand(string command)
     {
-        if (_client == null)
+        if (Rcon == null)
             return;
         command = command.Trim();
-        await _client.ExecuteCommandAsync(command);
+        await Rcon.ExecuteCommandAsync(command);
     }
 
     public static void ExecuteOnBridgeThread(Action action)
@@ -52,14 +53,14 @@ public class Tf2Bridge
         ThreadExecuteQueue.Enqueue(action);
     }
 
-    private static void BridgeLoop()
+    private static void BridgeLoop(CancellationToken token)
     {
         while (true)
         {
+            if (token.IsCancellationRequested)
+                return;
             while (ThreadExecuteQueue.TryDequeue(out var action))
-            {
                 action?.Invoke();
-            }
         }
     }
 }

@@ -2,7 +2,7 @@
 
 public struct Tf2BridgeSettings
 {
-    public string? RconPassword = null;
+    public string? RconPassword;
     public string RconHost = "127.0.0.1";
     public int RconPort = 27015;
     public string? Tf2Path = null;

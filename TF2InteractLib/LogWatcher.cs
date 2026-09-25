@@ -2,7 +2,7 @@
 
 public class LogWatcher
 {
-    public static async void ConsoleWatchLoop()
+    public static async void ConsoleWatchLoop(CancellationToken token)
     {
         try
         {
@@ -11,7 +11,11 @@ public class LogWatcher
             string filePath = Path.Combine(Tf2Bridge.Settings.Tf2Path, "tf", Tf2Bridge.Settings.LogFileName + ".log");
             
             // wait for file
-            while (!File.Exists(filePath)) ;
+            while (!File.Exists(filePath))
+            {
+                if (token.IsCancellationRequested)
+                    return;
+            }
             
             await using var fs = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             using var reader = new StreamReader(fs);
@@ -19,6 +23,8 @@ public class LogWatcher
             string output = string.Empty;
             while (true)
             {
+                if (token.IsCancellationRequested)
+                    return;
                 output += await reader.ReadToEndAsync();
                 while (output.Contains('\n'))
                 {
