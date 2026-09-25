@@ -1,4 +1,4 @@
-﻿namespace TF2InteractLib.Events.Types.ParserTypes;
+﻿namespace TF2InteractLib.Tf2Events.Types.ParserTypes;
 
 public class ChatMessage
 {

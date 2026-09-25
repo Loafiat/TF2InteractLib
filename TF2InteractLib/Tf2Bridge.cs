@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using RconSharp;
-using TF2InteractLib.Events;
+using TF2InteractLib.Tf2Events;
 using static TF2InteractLib.Tf2BridgeInternals;
 
 namespace TF2InteractLib;
@@ -9,12 +9,6 @@ public class Tf2Bridge
 {
     private static readonly ConcurrentQueue<Action?> ThreadExecuteQueue = new();
     public static Tf2BridgeSettings Settings { get; private set; }
-    public static event Action<string> OnConsoleOutput = EventManager.ParseLogEvent;
-
-    internal static void ExecuteOnConsoleOutput(string eventLog)
-    {
-        OnConsoleOutput?.Invoke(eventLog);
-    } 
     
     public static async Task<bool> Start(Tf2BridgeSettings settings)
     {

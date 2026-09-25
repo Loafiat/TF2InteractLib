@@ -1,4 +1,4 @@
-﻿namespace TF2InteractLib.Events.Types;
+﻿namespace TF2InteractLib.Tf2Events.Types;
 
 public interface IEventParser
 {

@@ -1,4 +1,6 @@
-﻿namespace TF2InteractLib;
+﻿using TF2InteractLib.Tf2Events;
+
+namespace TF2InteractLib;
 
 public class LogWatcher
 {
@@ -33,7 +35,7 @@ public class LogWatcher
                     output = output[(newLineIndex + 1)..];
                     Tf2Bridge.ExecuteOnBridgeThread(() =>
                     {
-                        Tf2Bridge.ExecuteOnConsoleOutput(eventLog);
+                        Events.ExecuteOnConsoleOutput(eventLog);
                     });
                 }
             }

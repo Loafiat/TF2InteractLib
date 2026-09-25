@@ -1,8 +1,8 @@
 ﻿using System.Text.RegularExpressions;
-using TF2InteractLib.Events.Types;
-using TF2InteractLib.Events.Types.ParserTypes;
+using TF2InteractLib.Tf2Events.Types;
+using TF2InteractLib.Tf2Events.Types.ParserTypes;
 
-namespace TF2InteractLib.Events.Parsers;
+namespace TF2InteractLib.Tf2Events.Parsers;
 
 public class ChatParser : IEventParser
 {
