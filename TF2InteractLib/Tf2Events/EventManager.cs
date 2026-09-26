@@ -12,7 +12,8 @@ public class EventManager
         new DefendParser(),
         new CaptureParser(),
         new SoundParser(),
-        new ServerParser()
+        new ServerParser(),
+        new ConnectionEvent()
     ];
     
     public static void ParseLogEvent(string logLine)

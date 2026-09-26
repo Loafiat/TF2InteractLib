@@ -18,7 +18,7 @@ public class DefendParser : IEventParser
         Match match = matches[0];
         dParams.defenderName = match.Groups["name"].Value;
         dParams.pointName = match.Groups["point"].Value;
-        dParams.teamnumber = (TF2Team)int.Parse(match.Groups["teamnum"].Value);
+        dParams.teamnumber = (Tf2Team)int.Parse(match.Groups["teamnum"].Value);
         Events.ExecuteOnPointDefended(dParams);
     }
 }

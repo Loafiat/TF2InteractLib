@@ -1,4 +1,5 @@
-﻿using TF2InteractLib.Tf2Events.Types.ParserTypes;
+﻿using TF2InteractLib.NetProps;
+using TF2InteractLib.Tf2Events.Types.ParserTypes;
 
 namespace TF2InteractLib.Tf2Events;
 
@@ -51,5 +52,19 @@ public static class Events
     internal static void ExecuteOnServerJoined(JoinedServerInfo serverInfo)
     {
         OnServerJoined?.Invoke(serverInfo);
+    }
+    
+    public static event Action<string> OnPlayerConnected = delegate { Task.Run(NetPropsManager.RefreshNetPropData); };
+
+    internal static void ExecuteOnPlayerConnected(string playerName)
+    {
+        OnPlayerConnected?.Invoke(playerName);
+    }
+    
+    public static event Action OnNetPropsUpdated = delegate { };
+
+    internal static void ExecuteOnNetPropsUpdated()
+    {
+        OnNetPropsUpdated?.Invoke();
     }
 }

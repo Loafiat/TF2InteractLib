@@ -18,7 +18,7 @@ public class CaptureParser : IEventParser
         Match match = matches[0];
         cParams.attackerName = match.Groups["name"].Value;
         cParams.pointName = match.Groups["point"].Value;
-        cParams.teamnumber = (TF2Team)int.Parse(match.Groups["teamnum"].Value);
+        cParams.teamnumber = (Tf2Team)int.Parse(match.Groups["teamnum"].Value);
         Events.ExecuteOnPointCaptured(cParams);
     }
 }

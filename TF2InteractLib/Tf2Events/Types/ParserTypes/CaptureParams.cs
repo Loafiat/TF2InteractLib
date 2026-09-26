@@ -6,5 +6,5 @@ public class CaptureParams
 {
     public string attackerName;
     public string pointName;
-    public TF2Team teamnumber;
+    public Tf2Team teamnumber;
 }

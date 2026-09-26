@@ -1,6 +1,6 @@
 ﻿namespace TF2InteractLib.Types;
 
-public enum TF2Team
+public enum Tf2Team
 {
     Any = -2,
     Invalid,

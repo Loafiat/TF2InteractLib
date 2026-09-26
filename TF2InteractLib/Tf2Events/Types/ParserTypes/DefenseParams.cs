@@ -6,5 +6,5 @@ public class DefenseParams
 {
     public string defenderName;
     public string pointName;
-    public TF2Team teamnumber;
+    public Tf2Team teamnumber;
 }

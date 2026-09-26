@@ -1,17 +1,19 @@
 ﻿using System.Collections.Concurrent;
 using RconSharp;
-using TF2InteractLib.Tf2Events;
+using TF2InteractLib.NetProps;
 using static TF2InteractLib.Tf2BridgeInternals;
 
 namespace TF2InteractLib;
 
 public class Tf2Bridge
 {
-    private static readonly ConcurrentQueue<Action?> ThreadExecuteQueue = new();
     public static Tf2BridgeSettings Settings { get; private set; }
+    private static readonly ConcurrentQueue<Action?> ThreadExecuteQueue = new();
     
     public static async Task<bool> Start(Tf2BridgeSettings settings)
     {
+        NetPropsManager.Init();
+        
         if (settings.RconPassword == null)
         {
             Console.WriteLine("Password required for client rcon to work!");
