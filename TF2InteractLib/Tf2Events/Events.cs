@@ -67,4 +67,11 @@ public static class Events
     {
         OnNetPropsUpdated?.Invoke();
     }
+    
+    public static event Action<string> OnUnknownCommand = delegate { };
+
+    internal static void ExecuteOnUnknownCommand(string command)
+    {
+        OnUnknownCommand?.Invoke(command);
+    }
 }

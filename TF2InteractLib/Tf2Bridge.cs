@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using RconSharp;
+using TF2InteractLib.Inputs;
 using TF2InteractLib.NetProps;
 using static TF2InteractLib.Tf2BridgeInternals;
 
@@ -13,7 +14,6 @@ public class Tf2Bridge
     public static async Task<bool> Start(Tf2BridgeSettings settings)
     {
         NetPropsManager.Init();
-        
         if (settings.RconPassword == null)
         {
             Console.WriteLine("Password required for client rcon to work!");
@@ -24,11 +24,13 @@ public class Tf2Bridge
         await Rcon.ConnectAsync();
         if (!await Rcon.AuthenticateAsync(settings.RconPassword))
             return false;
-        _bridgeThread = new Thread(() => BridgeLoop(_bridgeThreadCancellationToken.Token));
+        _bridgeThread = new Thread(() => BridgeLoop(_bridgeCancellationToken.Token));
         _bridgeThread.Start();
+        _inputThread = new Thread(InputEvents.Initialize);
+        _inputThread.Start();
         if (settings.LogFileName != null)
             await Rcon.ExecuteCommandAsync("con_logfile " + settings.LogFileName + ".log");
-        _logThread = new Thread(() => LogWatcher.ConsoleWatchLoop(_logThreadCancellationToken.Token))
+        _logThread = new Thread(() => LogWatcher.ConsoleWatchLoop(_bridgeCancellationToken.Token))
         {
             IsBackground = true
         };
@@ -54,7 +56,10 @@ public class Tf2Bridge
         while (true)
         {
             if (token.IsCancellationRequested)
+            {
+                InputEvents.hook.Dispose();
                 return;
+            }
             while (ThreadExecuteQueue.TryDequeue(out var action))
                 action?.Invoke();
         }

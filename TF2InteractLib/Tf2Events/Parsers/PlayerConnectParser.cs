@@ -2,7 +2,7 @@
 
 namespace TF2InteractLib.Tf2Events.Parsers;
 
-public class ConnectionEvent : IEventParser
+public class PlayerConnectParser : IEventParser
 {
     public void Parse(string logLine)
     {

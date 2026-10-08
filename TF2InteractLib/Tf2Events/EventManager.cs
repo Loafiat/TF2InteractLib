@@ -13,7 +13,8 @@ public class EventManager
         new CaptureParser(),
         new SoundParser(),
         new ServerParser(),
-        new ConnectionEvent()
+        new PlayerConnectParser(),
+        new UnknownCommandParser()
     ];
     
     public static void ParseLogEvent(string logLine)
