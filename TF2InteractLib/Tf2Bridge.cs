@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Text.RegularExpressions;
 using RconSharp;
 using TF2InteractLib.Inputs;
 using TF2InteractLib.NetProps;
@@ -6,7 +7,7 @@ using static TF2InteractLib.Tf2BridgeInternals;
 
 namespace TF2InteractLib;
 
-public class Tf2Bridge
+public partial class Tf2Bridge
 {
     public static Tf2BridgeSettings Settings { get; private set; }
     private static readonly ConcurrentQueue<Action?> ThreadExecuteQueue = new();
@@ -45,6 +46,24 @@ public class Tf2Bridge
         command = command.Trim();
         return await Rcon.ExecuteCommandAsync(command, multipacket);
     }
+    
+    public static async Task<string?> GetConvar(string key)
+    {
+        if (Rcon == null)
+            return string.Empty;
+        var result = await Rcon.ExecuteCommandAsync(key);
+        var match = ConvarRegex().Match(result);
+        if (!match.Success)
+            return null;
+        return match.Groups["key"].Value == key ? match.Groups["value"].Value : null;
+    }
+
+    public static async Task SetConvar(string key, string value)
+    {
+        if (Rcon == null)
+            return;
+        await Rcon.ExecuteCommandAsync(key + " " + value);
+    }
 
     public static void ExecuteOnBridgeThread(Action action)
     {
@@ -64,4 +83,7 @@ public class Tf2Bridge
                 action?.Invoke();
         }
     }
+
+    [GeneratedRegex("""(?<key>[^"]+)"\s*=\s*"(?<value>[^"]+)""", RegexOptions.Multiline)]
+    private static partial Regex ConvarRegex();
 }

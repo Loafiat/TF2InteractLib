@@ -3,15 +3,18 @@ using TF2InteractLib.Tf2Events.Types;
 
 namespace TF2InteractLib.Tf2Events.Parsers;
 
-public class SoundParser : IEventParser
+public partial class SoundParser : IEventParser
 {
-    public string soundRegex = @"^No caption found for '([^']+)'$";
+    public string soundRegex = @"";
     
     public void Parse(string logLine)
     {
-        MatchCollection matches = Regex.Matches(logLine.Trim(), soundRegex);
-        if (matches.Count <= 0)
+        Match match = SoundRegex().Match(logLine);
+        if (!match.Success)
             return;
-        Events.ExecuteOnCaptionSoundPlayed(matches[0].Groups[1].Value);
+        Events.ExecuteOnCaptionSoundPlayed(match.Groups[1].Value);
     }
+    
+    [GeneratedRegex("^No caption found for '([^']+)'$")]
+    public static partial Regex SoundRegex();
 }

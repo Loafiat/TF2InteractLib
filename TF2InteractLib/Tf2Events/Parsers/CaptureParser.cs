@@ -5,20 +5,20 @@ using TF2InteractLib.Types;
 
 namespace TF2InteractLib.Tf2Events.Parsers;
 
-public class CaptureParser : IEventParser
+public partial class CaptureParser : IEventParser
 {
-    public string captureRegex = @"^(?<name>.+?) captured (?<point>.+?) for team #(?<teamnum>\d+)$";
-    
     public void Parse(string logLine)
     {
-        MatchCollection matches = Regex.Matches(logLine.Trim(), captureRegex);
-        if (matches.Count <= 0)
+        Match match = CaptureRegex().Match(logLine);
+        if (!match.Success)
             return;
         CaptureParams cParams = new CaptureParams();
-        Match match = matches[0];
         cParams.attackerName = match.Groups["name"].Value;
         cParams.pointName = match.Groups["point"].Value;
         cParams.teamnumber = (Tf2Team)int.Parse(match.Groups["teamnum"].Value);
         Events.ExecuteOnPointCaptured(cParams);
     }
+
+    [GeneratedRegex(@"^(?<name>.+?) captured (?<point>.+?) for team #(?<teamnum>\d+)$")]
+    private static partial Regex CaptureRegex();
 }
