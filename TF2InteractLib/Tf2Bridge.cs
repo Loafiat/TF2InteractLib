@@ -84,6 +84,6 @@ public partial class Tf2Bridge
         }
     }
 
-    [GeneratedRegex("""(?<key>[^"]+)"\s*=\s*"(?<value>[^"]+)""", RegexOptions.Multiline)]
+    [GeneratedRegex("""(?<key>[^"]+)"\s*=\s*"(?<value>[^"]*)""", RegexOptions.Multiline)]
     private static partial Regex ConvarRegex();
 }
