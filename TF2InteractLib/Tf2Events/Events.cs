@@ -74,4 +74,11 @@ public static class Events
     {
         OnUnknownCommand?.Invoke(command);
     }
+    
+    public static event Action<PredictionError> OnPredictionError = delegate { };
+
+    internal static void ExecuteOnPredictionError(PredictionError error)
+    {
+        OnPredictionError?.Invoke(error);
+    }
 }

@@ -58,13 +58,6 @@ public partial class Tf2Bridge
         return match.Groups["key"].Value == key ? match.Groups["value"].Value : null;
     }
 
-    public static async Task SetConvar(string key, string value)
-    {
-        if (Rcon == null)
-            return;
-        await Rcon.ExecuteCommandAsync(key + " " + value);
-    }
-
     public static void ExecuteOnBridgeThread(Action action)
     {
         ThreadExecuteQueue.Enqueue(action);

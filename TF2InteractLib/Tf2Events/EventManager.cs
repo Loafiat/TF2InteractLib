@@ -12,9 +12,10 @@ public class EventManager
         new DefendParser(),
         new CaptureParser(),
         new SoundParser(),
-        new ServerParser(),
+        //new ServerParser(), // temp disable while fixing
         new PlayerConnectParser(),
-        new UnknownCommandParser()
+        new UnknownCommandParser(),
+        new PredErrorParser()
     ];
     
     public static void ParseLogEvent(string logLine)

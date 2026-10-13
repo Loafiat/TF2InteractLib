@@ -6,7 +6,8 @@ namespace TF2InteractLib.NetProps;
 
 public class NetPropsManager
 {
-    private static string _netPropRegex = @"(?<variable>\S+)\[(?<index>\d+)\]\s+(?<type>\S+)\s+\((?<value>.*)\)";
+    private const string NetPropArrayRegex = @"(?<variable>\S+)\[(?<index>\d+)\]\s+(?<type>\S+)\s+\((?<value>.*)\)";
+    private const string NetPropRegex = @"(?<variable>\S+)\s+(?<type>\S+)\s+\((?<value>.*)\)";
     
     public static Tf2Player[] CachedPlayerList = new Tf2Player[102];
 
@@ -25,7 +26,7 @@ public class NetPropsManager
         {
             foreach (var line in lines)
             {
-                Match match = Regex.Match(line, _netPropRegex);
+                Match match = Regex.Match(line, NetPropArrayRegex);
                 if (match.Success)
                 {
                     int Index = int.Parse(match.Groups["index"].Value);
@@ -65,6 +66,16 @@ public class NetPropsManager
                             break;
                         case "m_iUserID":
                             CachedPlayerList[Index].UserID = int.Parse(match.Groups["value"].Value);
+                            break;
+                    }
+                }
+                match = Regex.Match(line, NetPropRegex);
+                if (match.Success)
+                {
+                    switch (match.Groups["variable"].Value)
+                    {
+                        // TODO: track other properties
+                        default:
                             break;
                     }
                 }
