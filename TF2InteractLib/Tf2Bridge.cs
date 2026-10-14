@@ -1,7 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using RconSharp;
-using TF2InteractLib.Inputs;
 using TF2InteractLib.NetProps;
 using static TF2InteractLib.Tf2BridgeInternals;
 
@@ -11,6 +10,7 @@ public partial class Tf2Bridge
 {
     public static Tf2BridgeSettings Settings { get; private set; }
     private static readonly ConcurrentQueue<Action?> ThreadExecuteQueue = new();
+    public static event Action? OnBridgeThreadStop;
     
     public static async Task<bool> Start(Tf2BridgeSettings settings)
     {
@@ -27,8 +27,6 @@ public partial class Tf2Bridge
             return false;
         _bridgeThread = new Thread(() => BridgeLoop(_bridgeCancellationToken.Token));
         _bridgeThread.Start();
-        _inputThread = new Thread(InputEvents.Initialize);
-        _inputThread.Start();
         if (settings.LogFileName != null)
             await Rcon.ExecuteCommandAsync("con_logfile " + settings.LogFileName + ".log");
         _logThread = new Thread(() => LogWatcher.ConsoleWatchLoop(_bridgeCancellationToken.Token))
@@ -69,7 +67,7 @@ public partial class Tf2Bridge
         {
             if (token.IsCancellationRequested)
             {
-                InputEvents.hook.Dispose();
+                OnBridgeThreadStop?.Invoke();
                 return;
             }
             while (ThreadExecuteQueue.TryDequeue(out var action))
