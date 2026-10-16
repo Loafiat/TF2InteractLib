@@ -22,68 +22,61 @@ public class NetPropsManager
         string g15 = await Tf2Bridge.ExecuteCommand("g15_dumpplayer", true);
         g15 = g15.Trim();
         string[] lines = g15.Split('\n');
-        try
+        foreach (var line in lines)
         {
-            foreach (var line in lines)
+            Match match = Regex.Match(line, NetPropArrayRegex);
+            if (match.Success)
             {
-                Match match = Regex.Match(line, NetPropArrayRegex);
-                if (match.Success)
-                {
-                    int Index = int.Parse(match.Groups["index"].Value);
+                int Index = int.Parse(match.Groups["index"].Value);
 
-                    // Pinky promise you'll use the health variable for only good things? Yeah? Okay thank you :D
-                    switch (match.Groups["variable"].Value)
-                    {
-                        case "m_szName":
-                            CachedPlayerList[Index].SteamName = match.Groups["value"].Value;
-                            break;
-                        case "m_iPing":
-                            CachedPlayerList[Index].Ping = int.Parse(match.Groups["value"].Value);
-                            break;
-                        case "m_iScore":
-                            CachedPlayerList[Index].Score = int.Parse(match.Groups["value"].Value);
-                            break;
-                        case "m_iDeaths":
-                            CachedPlayerList[Index].Deaths = int.Parse(match.Groups["value"].Value);
-                            break;
-                        case "m_bConnected":
-                            CachedPlayerList[Index].IsConnected = bool.Parse(match.Groups["value"].Value);
-                            break;
-                        case "m_iTeam":
-                            CachedPlayerList[Index].Team = (Tf2Team)int.Parse(match.Groups["value"].Value);
-                            break;
-                        case "m_bAlive":
-                            CachedPlayerList[Index].Alive = bool.Parse(match.Groups["value"].Value);
-                            break;
-                        case "m_iHealth":
-                            CachedPlayerList[Index].Health = int.Parse(match.Groups["value"].Value);
-                            break;
-                        case "m_iAccountID":
-                            CachedPlayerList[Index].SteamID = int.Parse(match.Groups["value"].Value);
-                            break;
-                        case "m_bValid":
-                            CachedPlayerList[Index].IsValid = bool.Parse(match.Groups["value"].Value);
-                            break;
-                        case "m_iUserID":
-                            CachedPlayerList[Index].UserID = int.Parse(match.Groups["value"].Value);
-                            break;
-                    }
-                }
-                match = Regex.Match(line, NetPropRegex);
-                if (match.Success)
+                // Pinky promise you'll use the health variable for only good things? Yeah? Okay thank you :D
+                switch (match.Groups["variable"].Value)
                 {
-                    switch (match.Groups["variable"].Value)
-                    {
-                        // TODO: track other properties
-                        default:
-                            break;
-                    }
+                    case "m_szName":
+                        CachedPlayerList[Index].SteamName = match.Groups["value"].Value;
+                        break;
+                    case "m_iPing":
+                        CachedPlayerList[Index].Ping = int.Parse(match.Groups["value"].Value);
+                        break;
+                    case "m_iScore":
+                        CachedPlayerList[Index].Score = int.Parse(match.Groups["value"].Value);
+                        break;
+                    case "m_iDeaths":
+                        CachedPlayerList[Index].Deaths = int.Parse(match.Groups["value"].Value);
+                        break;
+                    case "m_bConnected":
+                        CachedPlayerList[Index].IsConnected = bool.Parse(match.Groups["value"].Value);
+                        break;
+                    case "m_iTeam":
+                        CachedPlayerList[Index].Team = (Tf2Team)int.Parse(match.Groups["value"].Value);
+                        break;
+                    case "m_bAlive":
+                        CachedPlayerList[Index].Alive = bool.Parse(match.Groups["value"].Value);
+                        break;
+                    case "m_iHealth":
+                        CachedPlayerList[Index].Health = int.Parse(match.Groups["value"].Value);
+                        break;
+                    case "m_iAccountID":
+                        CachedPlayerList[Index].SteamID = int.Parse(match.Groups["value"].Value);
+                        break;
+                    case "m_bValid":
+                        CachedPlayerList[Index].IsValid = bool.Parse(match.Groups["value"].Value);
+                        break;
+                    case "m_iUserID":
+                        CachedPlayerList[Index].UserID = int.Parse(match.Groups["value"].Value);
+                        break;
                 }
             }
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
+            match = Regex.Match(line, NetPropRegex);
+            if (match.Success)
+            {
+                switch (match.Groups["variable"].Value)
+                {
+                    // TODO: track other properties
+                    default:
+                        break;
+                }
+            }
         }
         Events.ExecuteOnNetPropsUpdated();
     }

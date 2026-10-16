@@ -1,48 +1,49 @@
-﻿using TF2InteractLib.Tf2Events;
+﻿using System.Text;
+using TF2InteractLib.Tf2Events;
 
 namespace TF2InteractLib;
 
 public class LogWatcher
 {
-    public static async void ConsoleWatchLoop(CancellationToken token)
+    public static async Task ConsoleWatchLoop(CancellationToken token)
     {
+        if (Tf2Bridge.Settings.Tf2Path == null)
+            return;
+        string filePath = Path.Combine(Tf2Bridge.Settings.Tf2Path, "tf", Tf2Bridge.Settings.LogFileName + ".log");
+
         try
         {
-            if (Tf2Bridge.Settings.Tf2Path == null)
-                return;
-            string filePath = Path.Combine(Tf2Bridge.Settings.Tf2Path, "tf", Tf2Bridge.Settings.LogFileName + ".log");
-            
-            // wait for file
             while (!File.Exists(filePath))
-            {
-                if (token.IsCancellationRequested)
-                    return;
-            }
-            
-            await using var fs = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                await Task.Delay(100, token);
+
+            await using var fs = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
             using var reader = new StreamReader(fs);
-            await reader.ReadToEndAsync();
-            string output = string.Empty;
-            while (true)
+            await reader.ReadToEndAsync(token);
+            
+            // decided while I'm here to change this to a string builder.
+            StringBuilder output = new StringBuilder();
+            while (!token.IsCancellationRequested)
             {
-                if (token.IsCancellationRequested)
-                    return;
-                output += await reader.ReadToEndAsync();
-                while (output.Contains('\n'))
+                string chunk = await reader.ReadToEndAsync(token);
+                if (chunk.Length == 0)
                 {
-                    int newLineIndex = output.IndexOf('\n');
-                    string eventLog = output[..newLineIndex];
-                    output = output[(newLineIndex + 1)..];
-                    Tf2Bridge.ExecuteOnBridgeThread(() =>
-                    {
-                        Events.ExecuteOnConsoleOutput(eventLog);
-                    });
+                    await Task.Delay(1, token);
+                    continue;
                 }
+                
+                output.Append(chunk);
+                string text = output.ToString();
+                int start = 0;
+                int nl;
+                while ((nl = text.IndexOf('\n', start)) >= 0)
+                {
+                    string line = text[start..nl];
+                    start = nl + 1;
+                    Tf2Bridge.ExecuteOnBridgeThread(() => Events.ExecuteOnConsoleOutput(line));
+                }
+                output.Clear().Append(text, start, text.Length - start);
             }
         }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-        }
+        catch (OperationCanceledException) { }
     }
 }
